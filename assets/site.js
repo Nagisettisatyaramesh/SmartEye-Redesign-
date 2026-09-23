@@ -99,12 +99,12 @@ $$('.stages').forEach(s => { if(!reduce) onScroll.push(() => {
   s.style.setProperty('--p', clamp((innerHeight * .9 - r.top) / (innerHeight * .5)).toFixed(3));
 }); });
 
-/* ---------- scroll story: design-control waterfall (home) ---------- */
+/* ---------- scroll story: pinned points around the SmartEye hub (home) ---------- */
 const story = $('[data-story]');
 if(story){
-  const steps = $$('.step', story), boxes = $$('.box', story), rails = $$('.rail b', story);
-  const flow = $('.flow', story), loops = $$('.loop, .loop-label', story);
-  const len = flow.getTotalLength(); flow.style.strokeDasharray = len; flow.style.strokeDashoffset = len;
+  const steps = $$('.step', story), nodes = $$('.node', story), spokes = $$('.spoke', story), rails = $$('.rail b', story);
+  spokes.forEach(l => { const len = Math.hypot(l.x2.baseVal.value - l.x1.baseVal.value, l.y2.baseVal.value - l.y1.baseVal.value);
+    l.style.strokeDasharray = len; l.style.strokeDashoffset = len; l.dataset.len = len; });
   const n = steps.length;
   let cur = -1;
   onScroll.push(() => {
@@ -113,13 +113,12 @@ if(story){
     const p = clamp(-r.top / (r.height - innerHeight));
     const pos = p * n;
     const idx = Math.min(n - 1, Math.floor(pos));
-    flow.style.strokeDashoffset = len * (1 - clamp(p * 1.08));
     rails.forEach((b, k) => b.style.transform = `scaleX(${clamp(pos - k)})`);
     if(idx !== cur){
       cur = idx;
       steps.forEach((s, k) => { s.classList.toggle('on', k === idx); s.setAttribute('aria-hidden', k !== idx); });
-      boxes.forEach(b => { const at = +b.dataset.at; b.classList.toggle('lit', idx >= at); b.classList.toggle('now', idx === at); });
-      loops.forEach(l => l.classList.toggle('lit', idx >= +l.dataset.from));
+      nodes.forEach(nd => { const at = +nd.dataset.at; nd.classList.toggle('lit', idx >= at); nd.classList.toggle('now', idx === at); });
+      spokes.forEach(l => { l.style.strokeDashoffset = idx >= +l.dataset.at ? 0 : l.dataset.len; });
     }
   });
 }
@@ -187,71 +186,6 @@ if(prose && toc){
   }
 }
 
-/* ---------- trace record (home hero) ---------- */
-const chainEl = $('#chain');
-if(chainEl){
-  const chains = [
-    [["User need","UN-03","A clinician sees a patient's ECG trend within seconds of opening their record.","Linked"],
-     ["Design input","SRS-014","Render a 24-hour ECG trend in 2 seconds or less on reference hardware.","Approved"],
-     ["Risk control","HAZ-007","A delayed display could lead to a missed arrhythmia. Mitigation: show a timeout warning.","Controlled"],
-     ["Verification","TC-112","Trend render time measured over 500 runs: 1.4 s at the 95th percentile.","Passed"],
-     ["Design history","DHF-4.2","Verification report filed in the Design History File, Rev C.","Filed"]],
-    [["User need","UN-07","A nurse is warned before a dose goes over the prescribed limit.","Linked"],
-     ["Design input","SRS-022","Show a blocking alert when the entered dose is more than 110% of the order.","Approved"],
-     ["Risk control","HAZ-011","Alert fatigue could lead to overrides. Mitigation: require a reason to override.","Controlled"],
-     ["Verification","TC-140","Override reason is required in every alert path.","Passed"],
-     ["Design history","DHF-4.5","Usability summary filed in the Design History File, Rev A.","Filed"]],
-    [["User need","UN-12","A quality lead can see who changed a clinical record, and when.","Linked"],
-     ["Design input","SRS-031","Log every edit with the user, a timestamp and the previous value.","Approved"],
-     ["Risk control","HAZ-019","Log tampering could hide an unauthorised change. Mitigation: use write-once storage.","Controlled"],
-     ["Verification","TC-161","Test protocol is drafted but hasn't run yet.","Open"],
-     ["Design history","DHF-4.9","Waiting for verification.","Blocked"]]
-  ];
-  const statusEl = $('#trace-status'), meter = $('#meter');
-  let timers = [];
-  const render = i => {
-    timers.forEach(clearTimeout); timers = [];
-    const c = chains[i];
-    const firstOpen = c.findIndex(l => l[3] === 'Open' || l[3] === 'Blocked');
-    const done = firstOpen === -1 ? c.length : firstOpen;
-    chainEl.innerHTML = c.map(([type, id, text, st]) => {
-      const open = st === 'Open' || st === 'Blocked';
-      return `<li class="link ${open ? 'is-open' : 'is-done'}"><div class="link-top"><span class="link-type">${type}</span><span class="link-id">${id}</span><span class="chip ${open ? 'open' : ''}">${st}</span></div><p>${text}</p></li>`;
-    }).join('');
-    const items = [...chainEl.children], top0 = items[0].offsetTop;
-    const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
-    svg.setAttribute('class', 'thread'); svg.setAttribute('aria-hidden', 'true');
-    svg.setAttribute('height', items[items.length - 1].offsetTop - top0); svg.style.top = (top0 + 11) + 'px';
-    const segs = [];
-    for(let k = 0; k < items.length - 1; k++){
-      const y1 = items[k].offsetTop - top0, y2 = items[k + 1].offsetTop - top0, ln = document.createElementNS(NS, 'line');
-      ln.setAttribute('x1', 6); ln.setAttribute('x2', 6); ln.setAttribute('y1', y1 + 8); ln.setAttribute('y2', y2 - 8);
-      if(k + 1 >= done) ln.classList.add('gap');
-      else { const l = y2 - y1 - 16; ln.style.strokeDasharray = l; ln.style.strokeDashoffset = reduce ? 0 : l; ln.style.transition = 'stroke-dashoffset .4s ease'; }
-      svg.appendChild(ln); segs.push(ln);
-    }
-    chainEl.appendChild(svg);
-    meter.classList.toggle('has-gap', done < c.length);
-    meter.firstElementChild.style.width = '0'; statusEl.innerHTML = '';
-    const step = reduce ? 0 : 380;
-    items.forEach((li, k) => timers.push(setTimeout(() => {
-      li.classList.add('on');
-      if(segs[k - 1] && !segs[k - 1].classList.contains('gap')) segs[k - 1].style.strokeDashoffset = 0;
-    }, k * step + 500 * !reduce)));
-    timers.push(setTimeout(() => {
-      meter.firstElementChild.style.width = (done / c.length * 100) + '%';
-      statusEl.innerHTML = done === c.length
-        ? `<strong>Trace complete</strong> · ${done} of ${c.length} links verified`
-        : `<strong style="color:#7a5308">Gap found</strong> · fix before your audit`;
-    }, items.length * step + 500 * !reduce));
-  };
-  $$('.tab').forEach(t => t.addEventListener('click', () => {
-    $$('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
-    render(+t.dataset.chain);
-  }));
-  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => render(0));
-}
-
 /* ---------- video facade ---------- */
 $$('[data-video]').forEach(b => b.addEventListener('click', () => {
   const f = document.createElement('iframe');
@@ -264,18 +198,31 @@ $$('[data-video]').forEach(b => b.addEventListener('click', () => {
 /* ---------- demo form ---------- */
 const countries = "Afghanistan|Albania|Algeria|Andorra|Angola|Antigua and Barbuda|Argentina|Armenia|Australia|Austria|Azerbaijan|The Bahamas|Bahrain|Bangladesh|Barbados|Belarus|Belgium|Belize|Benin|Bhutan|Bolivia|Bosnia and Herzegovina|Botswana|Brazil|Brunei|Bulgaria|Burkina Faso|Burundi|Cabo Verde|Cambodia|Cameroon|Canada|Central African Republic|Chad|Chile|China|Colombia|Comoros|Congo, Democratic Republic of the|Congo, Republic of the|Costa Rica|Côte d’Ivoire|Croatia|Cuba|Cyprus|Czech Republic|Denmark|Djibouti|Dominica|Dominican Republic|East Timor (Timor-Leste)|Ecuador|Egypt|El Salvador|Equatorial Guinea|Eritrea|Estonia|Eswatini|Ethiopia|Fiji|Finland|France|Gabon|The Gambia|Georgia|Germany|Ghana|Greece|Grenada|Guatemala|Guinea|Guinea-Bissau|Guyana|Haiti|Honduras|Hungary|Iceland|India|Indonesia|Iran|Iraq|Ireland|Israel|Italy|Jamaica|Japan|Jordan|Kazakhstan|Kenya|Kiribati|Korea, North|Korea, South|Kosovo|Kuwait|Kyrgyzstan|Laos|Latvia|Lebanon|Lesotho|Liberia|Libya|Liechtenstein|Lithuania|Luxembourg|Madagascar|Malawi|Malaysia|Maldives|Mali|Malta|Marshall Islands|Mauritania|Mauritius|Mexico|Micronesia, Federated States of|Moldova|Monaco|Mongolia|Montenegro|Morocco|Mozambique|Myanmar (Burma)|Namibia|Nauru|Nepal|Netherlands|New Zealand|Nicaragua|Niger|Nigeria|North Macedonia|Norway|Oman|Pakistan|Palau|Panama|Papua New Guinea|Paraguay|Peru|Philippines|Poland|Portugal|Qatar|Romania|Russia|Rwanda|Saint Kitts and Nevis|Saint Lucia|Saint Vincent and the Grenadines|Samoa|San Marino|Sao Tome and Principe|Saudi Arabia|Senegal|Serbia|Seychelles|Sierra Leone|Singapore|Slovakia|Slovenia|Solomon Islands|Somalia|South Africa|Spain|Sri Lanka|Sudan|Sudan, South|Suriname|Sweden|Switzerland|Syria|Taiwan|Tajikistan|Tanzania|Thailand|Togo|Tonga|Trinidad and Tobago|Tunisia|Turkey|Turkmenistan|Tuvalu|Uganda|Ukraine|United Arab Emirates|United Kingdom|United States|Uruguay|Uzbekistan|Vanuatu|Vatican City|Venezuela|Vietnam|Yemen|Zambia|Zimbabwe".split('|');
 $$('select[data-countries]').forEach(sel => countries.forEach(c => sel.add(new Option(c, c))));
-$$('form[data-demo-form]').forEach(form => form.addEventListener('submit', e => {
+/* The form posts to the endpoint in data-endpoint (e.g. the site's existing Contact Form 7 handler).
+   Until one is set, it says so plainly and points people to email instead of pretending to send. */
+$$('form[data-demo-form]').forEach(form => form.addEventListener('submit', async e => {
   e.preventDefault();
   const f = form.elements, s = $('.form-status', form);
   const name = f.namedItem('name'), email = f.namedItem('email');
   if(!name.value.trim() || !email.value || !email.checkValidity()){
     s.classList.add('error');
-    s.textContent = 'Enter your name and a valid work email to book a demo.';
+    s.textContent = 'Enter your name and a valid email address.';
     (name.value.trim() ? email : name).focus(); return;
   }
-  s.classList.remove('error');
-  s.textContent = 'Demo requested. We’ll email you to arrange a time.';
-  form.reset();
+  const endpoint = form.dataset.endpoint;
+  if(!endpoint){
+    s.classList.add('error');
+    s.innerHTML = 'Online requests aren’t available yet. Please email <a href="mailto:info@scube-technologies.com">info@scube-technologies.com</a>.';
+    return;
+  }
+  try{
+    const res = await fetch(endpoint, {method:'POST', body:new FormData(form)});
+    if(!res.ok) throw new Error(res.status);
+    s.classList.remove('error'); s.textContent = 'Thank you. Your request has been sent.'; form.reset();
+  }catch{
+    s.classList.add('error');
+    s.innerHTML = 'Your request couldn’t be sent. Please email <a href="mailto:info@scube-technologies.com">info@scube-technologies.com</a>.';
+  }
 }));
 
 request();
