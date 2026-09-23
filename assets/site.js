@@ -99,10 +99,13 @@ $$('.stages').forEach(s => { if(!reduce) onScroll.push(() => {
   s.style.setProperty('--p', clamp((innerHeight * .9 - r.top) / (innerHeight * .5)).toFixed(3));
 }); });
 
-/* ---------- scroll story: pinned points around the SmartEye hub (home) ---------- */
-const story = $('[data-story]');
-if(story){
-  const steps = $$('.step', story), nodes = $$('.node', story), spokes = $$('.spoke', story), rails = $$('.rail b', story);
+/* ---------- pinned scroll stories (home): design-control waterfall and the SmartEye hub ---------- */
+$$('[data-story]').forEach(story => {
+  const steps = $$('.step', story), rails = $$('.rail b', story);
+  const marks = $$('.box[data-at], .node[data-at]', story), spokes = $$('.spoke', story);
+  const loops = $$('.loop, .loop-label', story), flow = $('.flow', story);
+  const flowLen = flow ? flow.getTotalLength() : 0;
+  if(flow){ flow.style.strokeDasharray = flowLen; flow.style.strokeDashoffset = flowLen; }
   spokes.forEach(l => { const len = Math.hypot(l.x2.baseVal.value - l.x1.baseVal.value, l.y2.baseVal.value - l.y1.baseVal.value);
     l.style.strokeDasharray = len; l.style.strokeDashoffset = len; l.dataset.len = len; });
   const n = steps.length;
@@ -114,14 +117,16 @@ if(story){
     const pos = p * n;
     const idx = Math.min(n - 1, Math.floor(pos));
     rails.forEach((b, k) => b.style.transform = `scaleX(${clamp(pos - k)})`);
+    if(flow) flow.style.strokeDashoffset = flowLen * (1 - clamp(p * 1.1));
     if(idx !== cur){
       cur = idx;
       steps.forEach((s, k) => { s.classList.toggle('on', k === idx); s.setAttribute('aria-hidden', k !== idx); });
-      nodes.forEach(nd => { const at = +nd.dataset.at; nd.classList.toggle('lit', idx >= at); nd.classList.toggle('now', idx === at); });
+      marks.forEach(m => { const at = +m.dataset.at; m.classList.toggle('lit', idx >= at); m.classList.toggle('now', idx === at); });
       spokes.forEach(l => { l.style.strokeDashoffset = idx >= +l.dataset.at ? 0 : l.dataset.len; });
+      loops.forEach(l => l.classList.toggle('lit', idx >= +l.dataset.from));
     }
   });
-}
+});
 
 /* ---------- horizontal pinned scroll (product) ---------- */
 const hs = $('[data-hscroll]');

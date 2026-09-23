@@ -121,9 +121,9 @@ a:hover .text-link svg,.text-link:hover svg{transform:translateX(3px)}
 .hero-form .form{box-shadow:0 1px 0 var(--mist),0 30px 60px -30px rgba(14,31,46,.28)}
 
 /* values band */
-.values{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid rgba(255,255,255,.18)}
-.values li{padding:26px 20px 0 0;font:300 clamp(1.3rem,2vw,1.7rem)/1.15 var(--display);color:#fff;position:relative}
-.values li::before{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--trace-glow);margin-bottom:18px}
+.values{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ink)}
+.values li{padding:26px 20px 0 0;font:300 clamp(1.3rem,2vw,1.7rem)/1.15 var(--display);color:var(--ink);position:relative}
+.values li::before{content:"";display:block;width:8px;height:8px;border-radius:50%;background:var(--trace);margin-bottom:18px}
 
 /* ---------- scroll story (home) ---------- */
 .story{position:relative;height:600vh;background:var(--paper)}
@@ -460,3 +460,38 @@ footer address{font-style:normal;margin-top:18px;line-height:1.7}
 }
 /* parallax images start slightly above their frame so no gap shows as they drift */
 .page-hero-img img,.hv-main img,.cover img{margin-top:-6%}
+
+/* ---------- design-control waterfall (dark pinned story) ---------- */
+.story.is-dark{background:var(--ink);color:var(--on-dark);height:520vh}
+.story.is-dark h2{color:#fff}
+.story.is-dark h2 em{color:var(--trace-glow)}
+.story-lede{font-size:1rem;color:var(--on-dark-2);margin:-14px 0 30px}
+.story.is-dark .step .id{color:var(--trace-glow)}
+.story.is-dark .step h3{font-size:clamp(1.7rem,2.6vw,2.3rem);font-weight:300;color:#fff}
+.story.is-dark .rail i{background:rgba(255,255,255,.14)}
+.story.is-dark .rail i b{background:var(--trace-glow)}
+.waterfall{width:100%;height:auto;max-height:80vh;overflow:visible}
+.waterfall .box rect{fill:rgba(255,255,255,.03);stroke:rgba(255,255,255,.18);stroke-width:1;transition:fill .4s,stroke .4s}
+.waterfall .box text{fill:var(--on-dark-2);font:500 12px var(--mono);letter-spacing:.04em;transition:fill .4s}
+.waterfall .box .sub{font:400 13px var(--body);letter-spacing:0}
+.waterfall .box.lit rect{fill:rgba(111,209,201,.08);stroke:var(--trace-glow)}
+.waterfall .box.lit text{fill:#fff}
+.waterfall .box.now rect{fill:rgba(111,209,201,.18)}
+.waterfall .flow{fill:none;stroke:var(--trace-glow);stroke-width:2}
+.waterfall .flow-bg{fill:none;stroke:rgba(255,255,255,.12);stroke-width:2}
+.waterfall .loop{fill:none;stroke:rgba(255,255,255,.22);stroke-width:1.2;stroke-dasharray:3 5;transition:stroke .4s}
+.waterfall .loop.lit{stroke:var(--trace-glow)}
+.waterfall .loop-label{fill:var(--on-dark-2);font:500 11px var(--mono);letter-spacing:.06em;transition:fill .4s}
+.waterfall .loop-label.lit{fill:var(--trace-glow)}
+.story.is-dark .story-static{border-left-color:var(--trace-glow)}
+.story.is-dark .story-static .id{color:var(--trace-glow);display:block;margin-bottom:6px}
+.story.is-dark .story-static h3{color:#fff;font-weight:300}
+@media (max-width:860px){
+  .story.is-dark{height:auto}
+  .story .waterfall{display:none}
+  .story-lede{margin:0 0 26px}
+}
+@media (prefers-reduced-motion:reduce){
+  .story.is-dark{height:auto}
+  .story .waterfall{display:none}
+}

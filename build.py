@@ -372,6 +372,57 @@ def hub_svg():
     </svg>"""
 
 
+DESIGN_CONTROL = [  # the list on the original Why SmartEye page, split only for the diagram's two-line labels
+    ("Design inputs and outputs", "DESIGN INPUTS", "and outputs"),
+    ("Risk management and hazard analysis", "RISK MANAGEMENT", "and hazard analysis"),
+    ("Design verification and validation (V&amp;V)", "DESIGN V&amp;V", "verification and validation"),
+    ("Design reviews and approvals", "DESIGN REVIEWS", "and approvals"),
+    ("Software development life cycle (SDLC) documentation", "SDLC", "documentation"),
+]
+DC_LEDE = ("Developing a medical device—especially software-based solutions—requires strict adherence to regulations like "
+           "FDA 21 CFR Part 820, ISO 13485, and IEC 62304. SmartEye centralizes and automates your design control processes, "
+           "making it easy to manage :")
+
+
+def design_control_story():
+    n = len(DESIGN_CONTROL)
+    steps = "".join(
+        f'<div class="step{" on" if k == 0 else ""}"><span class="id">STEP {k+1} OF {n}</span><h3>{full}</h3></div>'
+        for k, (full, _, _) in enumerate(DESIGN_CONTROL))
+    static = "".join(f'<li><span class="id">STEP {k+1}</span><h3>{full}</h3></li>' for k, (full, _, _) in enumerate(DESIGN_CONTROL))
+    rails = "".join("<i><b></b></i>" for _ in DESIGN_CONTROL)
+    boxes, flow = "", []
+    for k, (_, a, b) in enumerate(DESIGN_CONTROL):
+        x = y = 20 + k * 95
+        boxes += (f'<g class="box" data-at="{k}"><rect x="{x}" y="{y}" width="210" height="64" rx="10"/>'
+                  f'<text x="{x+18}" y="{y+27}">{a}</text><text class="sub" x="{x+18}" y="{y+47}">{b}</text></g>')
+        if k < n - 1:
+            flow.append(f"M{x+100} {y+64} V{y+127} H{x+95}")
+    d = " ".join(flow)
+    # V&V loop: from the V&V box back up to design inputs and outputs
+    loop = ('<path class="loop" data-from="2" d="M420 242 C 520 242, 520 52, 230 52"/>'
+            '<text class="loop-label" data-from="2" x="498" y="140">V&amp;V</text>')
+    svg = f"""<svg class="waterfall" viewBox="0 0 640 490" role="img" aria-label="Design control: design inputs and outputs, risk management and hazard analysis, design verification and validation, design reviews and approvals, SDLC documentation">
+      <path class="flow-bg" d="{d}"/><path class="flow" d="{d}"/>{loop}{boxes}
+    </svg>"""
+    return f"""
+<section class="story is-dark" data-story aria-label="Why SmartEye for Design Control and SaMD?">
+  <div class="story-stage">
+    <div class="wrap">
+      <div>
+        <h2>Why SmartEye for Design Control and <em>SaMD?</em></h2>
+        <p class="lede story-lede">{DC_LEDE}</p>
+        <div class="steps">{steps}</div>
+        <div class="rail" aria-hidden="true">{rails}</div>
+        <ol class="story-static">{static}</ol>
+      </div>
+      {svg}
+    </div>
+  </div>
+</section>
+"""
+
+
 def build_home():
     r = ""
     n = len(HOME_POINTS)
@@ -414,7 +465,8 @@ def build_home():
   </div>
 </section>
 
-<section class="section dark" id="why">
+{design_control_story()}
+<section class="section" id="why">
   <div class="wrap">
     <div class="section-head" data-reveal>
       <h2>Transform the way you <em>Manage Compliance</em></h2>
