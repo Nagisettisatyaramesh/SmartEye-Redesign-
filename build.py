@@ -45,6 +45,12 @@ LEGAL = [
 ]
 DEMO_CTA = ("Arrange your free tailored demo of SmartEye eQMS today, and see for yourself how an enhanced "
             "360 view could benefit your SaMD design and development.")
+def asset_version(name):
+    """Short content hash so browsers fetch the new file whenever it changes."""
+    import hashlib
+    return hashlib.sha1((ROOT / "assets" / name).read_bytes()).hexdigest()[:8]
+
+
 RES_LEDE = "Everyone has their own way of learning. S-Cube's resources helps to learn more"
 
 
@@ -166,7 +172,7 @@ def head(title, desc, root):
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{root}assets/site.css">
+<link rel="stylesheet" href="{root}assets/site.css?v={asset_version('site.css')}">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -215,7 +221,7 @@ def footer(root):
     </div>
   </div>
 </footer>
-<script src="{root}assets/site.js" defer></script>
+<script src="{root}assets/site.js?v={asset_version('site.js')}" defer></script>
 </body>
 </html>
 """
