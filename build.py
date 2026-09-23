@@ -262,11 +262,13 @@ def post_card(slug, root):
       </a>"""
 
 
-def page_hero(crumb, h1, lede="", extra=""):
+def page_hero(crumb, h1, lede="", extra="", img=None):
     crumbs = f'<nav class="crumbs" aria-label="Breadcrumb">{crumb}</nav>' if crumb else ""
     lede_html = f'<p class="lede" data-reveal>{lede}</p>' if lede else ""
+    figure = (f'<figure class="page-hero-img" data-reveal style="--d:.15s"><img data-parallax="0.06" src="{img}" alt=""></figure>'
+              if img else "")
     return f"""
-<section class="page-hero">
+<section class="page-hero{' with-img' if img else ''}">
   <div class="wrap">
     <div>
       {crumbs}
@@ -274,8 +276,27 @@ def page_hero(crumb, h1, lede="", extra=""):
       {lede_html}
       {extra}
     </div>
+    {figure}
   </div>
 </section>"""
+
+
+VIDEOS = [
+    ("YjVfsjdiYAY", "EQMS - SmartEye by Scube Technologies"),
+    ("hOhDr8tnIbw", "Medica 2023 - Smarteye is the best eQMS for Medical Device companies - Anindya Mookerjea"),
+    ("mghgVKrNWqc", "Why should you choose this eQMS with Anindya Mookerjea"),
+    ("p7tZN8k9nM8", "One of the best eQMS for Medical Devices"),
+]
+
+
+def video_card(vid, title):
+    return f"""<figure class="vcard">
+      <button class="video" data-video="{vid}" aria-label="Play: {esc(title)}">
+        <img loading="lazy" src="https://i.ytimg.com/vi/{vid}/hqdefault.jpg" alt="">
+        <span class="play"><span class="play-dot">{PLAY}</span></span>
+      </button>
+      <figcaption>{esc(title)}</figcaption>
+    </figure>"""
 
 
 def video_button():
@@ -366,10 +387,10 @@ def build_home():
     posts = "".join(post_card(s, r) for s in ARTICLES[:3])
 
     body = f"""
-<section class="hero" id="demo">
+<section class="hero">
   <div class="wrap">
     <div>
-      <h1 class="rise">Best E-QMS For SaMD And Medical Device Design Control</h1>
+      <h1 class="rise">Best E-QMS For <em>SaMD</em> And Medical Device Design Control</h1>
       <p class="lede" data-reveal>eQMS is the tool that a Medical Device company should have when they want to optimize their Quality Management System and keep track of any regulatory activity. We transform your manual and paper-based processes into one platform. In medical jargon, you can say we help you mitigate risk, accelerate compliance and improve quality</p>
       <ul class="gains" data-stagger>
         <li>faster quality processes</li>
@@ -378,11 +399,17 @@ def build_home():
         <li>faster external audits and more.</li>
       </ul>
       <div class="cta-row" data-reveal style="--d:.2s">
-        <a class="btn btn-quiet" href="https://youtu.be/{VIDEO}" target="_blank" rel="noopener">{PLAY}Watch a Video</a>
+        <a class="btn btn-primary" href="#demo">Get a Demo {ARROW}</a>
+        <a class="btn btn-quiet" href="resources.html#video">{PLAY}Watch a Video</a>
       </div>
     </div>
-    <div class="hero-form" data-reveal style="--d:.15s">
-      {demo_form(r, "h")}
+    <div class="hero-visual" aria-hidden="true">
+      <figure class="hv-main"><img data-parallax="0.05" src="assets/img/lab-microscope.jpg" alt=""></figure>
+      <figure class="hv-eye"><img src="{UP}/2025/01/smarteye.jpg" alt=""></figure>
+      <div class="hv-badge">
+        <img src="{UP}/2023/09/mark-of-trust-certified-ISO-9001-quality-management-systems-white-logo-En-GB-1019-300x152.png" alt="">
+        <img src="{UP}/2023/09/mark-of-trust-certified-ISOIEC-27001-information-security-management-white-logo-En-GB-1019-300x152.png" alt="">
+      </div>
     </div>
   </div>
 </section>
@@ -437,7 +464,16 @@ def build_home():
     <div class="more"><a class="btn btn-quiet" href="resources.html">More Resources {ARROW}</a></div>
   </div>
 </section>
-{cta_band(r, DEMO_CTA, f'<a class="btn btn-primary" href="#demo">Get a Demo {ARROW}</a>')}"""
+
+<section class="section dark demo" id="demo">
+  <div class="wrap">
+    <div data-reveal>
+      <h2>{DEMO_CTA}</h2>
+      <figure class="demo-img"><img loading="lazy" src="{UP}/2025/01/smarteye.jpg" alt=""></figure>
+    </div>
+    <div data-reveal>{demo_form(r, "h")}</div>
+  </div>
+</section>"""
     write("index.html", head("Best eQMS for Medical Devices & SaMD Compliance",
                              "Explore the best Quality Management System eQMS medical devices to streamline compliance and enhance quality. Book a demo Today!", r)
           + header(r, "index.html", "#demo") + body + footer(r))
@@ -482,7 +518,8 @@ def build_why():
     body = page_hero('<a href="index.html">Home</a><span>/</span><span>Why SmartEye eQMS</span>',
                      "Best QMS for Medical Device Design Control and <em>SaMD</em>",
                      "SmartEye is your all-in-one Quality Management System (QMS) solution, purpose-built for medical device design control and Software as a Medical Device (SaMD) compliance. Whether you're developing hardware-based devices or standalone medical software, SmartEye helps you streamline your product lifecycle while staying compliant with global regulatory standards.",
-                     f'<p style="margin-top:32px" data-reveal><a class="btn btn-primary" href="index.html#demo">Get a Demo {ARROW}</a></p>')
+                     f'<p style="margin-top:32px" data-reveal><a class="btn btn-primary" href="index.html#demo">Get a Demo {ARROW}</a></p>',
+                     img=f"{UP}/2023/02/Why-S-Cube-SmartEye_Hero-Image.png")
     body += f"""
 <div class="ticker" aria-hidden="true"><div class="ticker-track">{t}{t}</div></div>
 
@@ -543,7 +580,8 @@ def build_about():
                  "all whilst offering tailored support that enhances business capability and innovation management.")
     st = " ".join(f'<span class="dim">{w}</span>' for w in statement.split())
     body = page_hero('<a href="index.html">Home</a><span>/</span><span>Who we are</span>', "S-Cube <em>Technologies</em>",
-                     "We are committed to bringing meaningful difference to your business, with quality solutions built from innovation.")
+                     "We are committed to bringing meaningful difference to your business, with quality solutions built from innovation.",
+                     img=f"{UP}/2023/02/Powered-By-S-Cube_Hero-Image.png")
     body += f"""
 <hr class="rule">
 <section class="section">
@@ -603,12 +641,12 @@ def build_resources():
 </section>
 
 <section class="section dark" id="video">
-  <div class="wrap split">
-    <div data-reveal>
+  <div class="wrap">
+    <div class="section-head" data-reveal>
       <h2>Videos and <em>Media</em></h2>
-      <p class="lede" style="margin-top:22px">{RES_LEDE}</p>
+      <p class="lede">{RES_LEDE}</p>
     </div>
-    {video_button()}
+    <div class="videos" data-stagger>{"".join(video_card(v, t) for v, t in VIDEOS)}</div>
   </div>
 </section>
 {cta_band(r)}"""
@@ -655,6 +693,7 @@ def build_articles():
 def build_careers():
     r = ""
     items = "".join(f"""<li class="job"><a href="careers/{slug}.html">
+          <figure class="job-img"><img loading="lazy" src="{UP}/2023/02/Why-S-Cube-SmartEye_Hero-Image.png" alt=""></figure>
           <div><time class="meta" datetime="{j['date']}">{nice_date(j['date'])}</time><h3>{j['title']}</h3><p class="job-sum">{j['summary']}</p></div>
           <span class="read">Read more</span><span class="arrow-c">{ARROW}</span></a></li>""" for slug, j in JOBS.items())
     body = page_hero('<a href="index.html">Home</a><span>/</span><span>Career</span>', "Career")
@@ -680,7 +719,8 @@ def build_careers():
       <p class="meta"><time datetime="{j['date']}">{nice_date(j['date'])}</time></p>
     </div>
   </header>
-  <div class="reading single" style="padding-top:24px">
+  <div class="cover"><figure><img data-parallax="0.08" src="{UP}/2023/02/Why-S-Cube-SmartEye_Hero-Image.png" alt=""></figure></div>
+  <div class="reading single">
     <div class="prose">{html}</div>
   </div>
 </article>"""
@@ -691,7 +731,9 @@ def build_careers():
 def build_contact():
     r = ""
     body = page_hero('<a href="index.html">Home</a><span>/</span><span>Contact Us</span>', "Talk to the <em>SmartEye eQMS</em> team",
-                     "Want to understand more about how SmartEye eQMS could transform the way you manage your SaMD design and development process? Browse our selection of videos or get in touch with one of our expert team today for a free and easy demo from those who built it.")
+                     "Want to understand more about how SmartEye eQMS could transform the way you manage your SaMD design and development process? Browse our selection of videos or get in touch with one of our expert team today for a free and easy demo from those who built it.",
+                     f'<p style="margin-top:32px" data-reveal><a class="btn btn-quiet" href="resources.html#video">{PLAY}Watch a Video</a></p>',
+                     img=f"{UP}/2023/02/Contact_Hero-Image-1.png")
     body += f"""
 <section class="section section-tight">
   <div class="wrap contact-grid">
